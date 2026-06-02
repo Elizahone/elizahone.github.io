@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on A minimal Hugo website</title><link>https://example.org/post/</link><description>Recent content in Posts on A minimal Hugo website</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 07 May 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://example.org/post/index.xml" rel="self" type="application/rss+xml"/><item><title>[Game101] 重心坐标矫正</title><link>https://example.org/post/2026/05/07/game101-%E9%87%8D%E5%BF%83%E5%9D%90%E6%A0%87%E7%9F%AB%E6%AD%A3/</link><pubDate>Thu, 07 May 2026 00:00:00 +0000</pubDate><guid>https://example.org/post/2026/05/07/game101-%E9%87%8D%E5%BF%83%E5%9D%90%E6%A0%87%E7%9F%AB%E6%AD%A3/</guid><description>&lt;p&gt;在光栅化三角形时，我们常使用&lt;strong&gt;重心坐标&lt;/strong&gt;来判断点是否在三角形内、插值法线、插值纹理坐标，然而在光栅化
+三角形时计算出来的是在&lt;strong&gt;屏幕坐标&lt;/strong&gt;下的重心坐标，而在运用透视投影时实际需要的应该是在&lt;strong&gt;观察坐标&lt;/strong&gt;下的
+重心坐标，虽然不进行矫正在某种情况下看不出差别。本文将基于&lt;a href="https://www.bilibili.com/video/BV1X7411F744"&gt;Games101&lt;/a&gt;所给的的投影矩阵进行矫正公式的推导。&lt;/p&gt;
+&lt;h1 id="正文"&gt;正文&lt;/h1&gt;
+&lt;p&gt;首先，透视投影矩阵 $M_{perspective}$ 如下：&lt;/p&gt;
+$$
+M_{perspective}=
+M_{正交}
+\times
+$$$$\begin{bmatrix}
+n &amp; 0 &amp; 0 &amp; 0 \newline
+0 &amp; n &amp; 0 &amp; 0 \newline
+0 &amp; 0 &amp; n+f &amp; -n \times f \newline
+0 &amp; 0 &amp; 1 &amp; 0 \newline
+\end{bmatrix}=
+\begin{bmatrix}
+\frac{2n}{r-l} &amp; 0 &amp; -\frac{r+l}{r-l} &amp; 0\newline
+0 &amp; \frac{2n}{t-b} &amp; -\frac{t+b}{t-b} &amp; 0\newline
+0 &amp; 0 &amp; \frac{n+f}{n-f} &amp; \frac{-2nf}{n-f} \newline
+0 &amp; 0 &amp; 1 &amp; 0
+\end{bmatrix}
+$$&lt;p&gt;根据正交投影的性质，可知正交投影并不会改变 $x、y、z$ 的值，实际改变 $x、y、z$ 的是矩阵M,其中：
+&lt;/p&gt;</description></item><item><title>A Plain Markdown Post</title><link>https://example.org/post/2016/02/14/a-plain-markdown-post/</link><pubDate>Sun, 14 Feb 2016 00:00:00 +0000</pubDate><guid>https://example.org/post/2016/02/14/a-plain-markdown-post/</guid><description>&lt;p&gt;This sample post is mainly for
+&lt;a href="https://github.com/rstudio/blogdown"&gt;&lt;strong&gt;blogdown&lt;/strong&gt;&lt;/a&gt; users. If you do not use
+&lt;strong&gt;blogdown&lt;/strong&gt;, you can skip the first section.&lt;/p&gt;
+&lt;h1 id="1-markdown-or-r-markdown"&gt;1. Markdown or R Markdown&lt;/h1&gt;
+&lt;p&gt;This is a post written in plain Markdown (&lt;code&gt;*.md&lt;/code&gt;) instead of R Markdown
+(&lt;code&gt;*.Rmd&lt;/code&gt;). The major differences are:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;You cannot run any R code in a plain Markdown document, whereas in an R
+Markdown document, you can embed R code chunks (&lt;code&gt;```{r}&lt;/code&gt;);&lt;/li&gt;
+&lt;li&gt;A plain Markdown post is rendered through
+&lt;a href="https://gohugo.io/overview/configuration/"&gt;Goldmark&lt;/a&gt; by default, and an R
+Markdown document is compiled by
+&lt;a href="http://rmarkdown.rstudio.com"&gt;&lt;strong&gt;rmarkdown&lt;/strong&gt;&lt;/a&gt; and
+&lt;a href="http://pandoc.org"&gt;Pandoc&lt;/a&gt;.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;There are differences in syntax between Goldmark&amp;rsquo;s Markdown and Pandoc&amp;rsquo;s
+Markdown. For example, Goldmark does not support LaTeX math and Pandoc does. I
+have added the KaTeX support to this theme (i.e.,
+&lt;a href="https://github.com/yihui/hugo-xmin"&gt;hugo-xmin&lt;/a&gt;)&lt;/p&gt;</description></item><item><title>Lorem Ipsum</title><link>https://example.org/post/2015/07/23/lorem-ipsum/</link><pubDate>Thu, 23 Jul 2015 00:00:00 +0000</pubDate><guid>https://example.org/post/2015/07/23/lorem-ipsum/</guid><description>&lt;p&gt;&lt;strong&gt;Lorem ipsum&lt;/strong&gt; dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore &lt;em&gt;magna aliqua&lt;/em&gt;. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&lt;/p&gt;
+&lt;p&gt;Quisque mattis volutpat lorem vitae feugiat. Praesent porta est quis porta imperdiet. Aenean porta, mi non cursus volutpat, mi est mollis libero, id suscipit orci urna a augue. In fringilla euismod lacus, vitae tristique massa ultricies vitae. Mauris accumsan ligula tristique, viverra nulla sed, porta sapien. Vestibulum facilisis nec nisl blandit convallis. Maecenas venenatis porta malesuada. Ut ac erat tortor. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla sodales quam sit amet tincidunt egestas. In et turpis at orci vestibulum ullamcorper. Aliquam sed ante libero. Sed hendrerit arcu lacus.&lt;/p&gt;</description></item></channel></rss>

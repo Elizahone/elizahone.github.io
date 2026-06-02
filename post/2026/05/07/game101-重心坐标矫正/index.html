@@ -1,0 +1,81 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>[Game101] 重心坐标矫正 | A minimal Hugo website</title><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css><style>.nav a:link,.nav a:visited{color:#00f!important}.nav a:hover{color:#00f!important}.nav a:active{color:#00f!important}a:link,a:visited{color:#00f!important}</style></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/post/>Blog</a></li><li><a href=/categories/>Categories</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>[Game101] 重心坐标矫正</span></h1><h2 class=date>2026/05/07</h2></div><main><p>在光栅化三角形时，我们常使用<strong>重心坐标</strong>来判断点是否在三角形内、插值法线、插值纹理坐标，然而在光栅化
+三角形时计算出来的是在<strong>屏幕坐标</strong>下的重心坐标，而在运用透视投影时实际需要的应该是在<strong>观察坐标</strong>下的
+重心坐标，虽然不进行矫正在某种情况下看不出差别。本文将基于<a href=https://www.bilibili.com/video/BV1X7411F744>Games101</a>所给的的投影矩阵进行矫正公式的推导。</p><h1 id=正文>正文</h1><p>首先，透视投影矩阵 $M_{perspective}$ 如下：</p>$$
+M_{perspective}=
+M_{正交}
+\times
+$$$$\begin{bmatrix}
+n & 0 & 0 & 0 \newline
+0 & n & 0 & 0 \newline
+0 & 0 & n+f & -n \times f \newline
+0 & 0 & 1 & 0 \newline
+\end{bmatrix}=
+\begin{bmatrix}
+\frac{2n}{r-l} & 0 & -\frac{r+l}{r-l} & 0\newline
+0 & \frac{2n}{t-b} & -\frac{t+b}{t-b} & 0\newline
+0 & 0 & \frac{n+f}{n-f} & \frac{-2nf}{n-f} \newline
+0 & 0 & 1 & 0
+\end{bmatrix}
+$$<p>根据正交投影的性质，可知正交投影并不会改变 $x、y、z$ 的值，实际改变 $x、y、z$ 的是矩阵M,其中：</p>$$M=\begin{bmatrix}
+n & 0 & 0 & 0\newline
+0 & n & 0 & 0\newline
+0 & 0 & n+f & -n \times f \newline
+0 & 0 & 1 & 0
+\end{bmatrix}$$<p>并且对于齐次坐标下的点P=$(x, y, z, 1)^T$,经透视投影后有$P^{'}$：</p>$$M\times P=\begin{bmatrix}
+nx \\
+ny \\
+z(n+f)-nf \\
+z
+\end{bmatrix}=z\times \begin{bmatrix}
+\frac{nx}{z} \\
+\frac{ny}{z} \\
+\frac{z(n+f)-nf}{z} \\
+1
+\end{bmatrix}=z\times P^{'}$$<p>可以看出，经透视变换后 $x->\frac{nx}{z}$&mldr;。</p><p>假设观察坐标下有 点 $P,A,B,C$ ，其在屏幕坐标下为别为 $P^{'},A^{'},B^{'},C^{'}$ 且 $A,B,C$ 构成 三角形，$P$ 在三角形$ABC$内。</p><p>根据重心坐标定义有：</p>$$
+P^{'}=\begin{bmatrix}
+A{'} \ \ \ B^{'} \ \ \ C^{'}
+\end{bmatrix} \times
+\begin{bmatrix}
+\alpha^{'} \newline
+\beta^{'} \newline
+\gamma^{'}
+\end{bmatrix}
+$$<p>同时，有 $P^{'}=\frac{1}{P.z}M\times P$ , $A^{'}=\frac{1}{A.z}M\times A$, $B^{'}=\frac{1}{B.z}M\times B$, $C^{'}=\frac{1}{C.z}M\times C$ ,带入上式中有：</p>$$
+\frac{1}{P.z}M\times P =
+\begin{bmatrix}
+\frac{1}{A.z}M\times A \ \ \ \ \frac{1}{B.z}M\times B \ \ \ \ \frac{1}{C.z}M\times C
+\end{bmatrix}
+\times
+\begin{bmatrix}
+\alpha^{'} \newline
+\beta^{'} \newline
+\gamma^{'}
+\end{bmatrix}
+$$<p>根据分块矩阵，很容易得到以下式子：</p>$$
+\frac{1}{P.z}\times P =
+\begin{bmatrix}
+\frac{1}{A.z}\times A \ \ \ \ \frac{1}{B.z}\times B \ \ \ \ \frac{1}{C.z}\times C
+\end{bmatrix}
+\times
+\begin{bmatrix}
+\alpha^{'} \newline
+\beta^{'} \newline
+\gamma^{'}
+\end{bmatrix}
+$$<p>进一步，由于$P.z,A.z,B.z,C.z$ 为标量，从而有:</p>$$
+P =
+\begin{bmatrix}
+A \ \ \ \ B \ \ \ \ C
+\end{bmatrix}
+\times
+\begin{bmatrix}
+\frac{\alpha^{'}}{A.z}\newline
+\frac{\beta^{'}}{B.z} \newline
+\frac{\gamma^{'} }{C.z}
+\end{bmatrix} \times \frac{1}{P.z}
+$$<p>而这正是P的重心坐标形式。但是，我们根本不知道$P$的任何信息。
+所幸，我们知道，重心坐标实际上就是 $A,B,C$的凸组合，有$\alpha+\beta+\gamma=1$ ,因此，有：</p>$$(\frac{\alpha^{'}}{A.z}+\frac{\beta^{'}}{B.z} +\frac{\gamma^{'} }{C.z})\times \frac{1}{P.z}=1$$<p>从而很轻易得到 $\frac{1}{P.z}$，而其他数据我们都已经知道了，故最终得到观察坐标下的重心坐标 $\alpha,\beta,\gamma$ 分别为：</p>$$
+\alpha=\frac{\alpha^{'}}{A.z}/(\frac{\alpha^{'}}{A.z}+\frac{\beta^{'}}{B.z} +\frac{\gamma^{'} }{C.z}) \newline
+\beta=\frac{\beta^{'}}{A.z}/(\frac{\alpha^{'}}{A.z}+\frac{\beta^{'}}{B.z} +\frac{\gamma^{'} }{C.z})\newline
+\gamma=\frac{\gamma^{'}}{A.z}/(\frac{\alpha^{'}}{A.z}+\frac{\beta^{'}}{B.z} +\frac{\gamma^{'} }{C.z})\newline
+$$<p>并且，观察坐标下的 $z$ 就等于经透视变换后的$w$分量。</p><h5 id=参考资料>参考资料</h5><p><a href=https://github.com/ssloy/tinyrenderer/wiki/Technical-difficulties:-linear-interpolation-with-perspective-deformations>Github-tinyrenderer</a></p></main><footer><link rel=stylesheet href=//cdn.jsdelivr.net/npm/katex/dist/katex.min.css><script src=//cdn.jsdelivr.net/npm/@xiee/utils/js/math-code.min.js defer></script><script src=//cdn.jsdelivr.net/npm/katex/dist/katex.min.js defer></script><script src=//cdn.jsdelivr.net/npm/katex/dist/contrib/auto-render.min.js defer></script><script src=//cdn.jsdelivr.net/npm/@xiee/utils/js/render-katex.js defer></script><script src=//cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.min.js defer></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1},{left:"\\[",right:"\\]",display:!0}],throwOnError:!1})})</script><hr>© <a href=https://elizahone.github.io>Elizahone</a> 2026 &ndash; 2026 | <a href=https://github.com/elizahone>Github</a></footer></body></html>
