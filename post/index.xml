@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Elizahone's Site</title><link>https://elizahone.github.io/post/</link><description>Recent content in Posts on Elizahone's Site</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 07 May 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://elizahone.github.io/post/index.xml" rel="self" type="application/rss+xml"/><item><title>[Game101] 重心坐标矫正</title><link>https://elizahone.github.io/post/2026/05/07/game101-%E9%87%8D%E5%BF%83%E5%9D%90%E6%A0%87%E7%9F%AB%E6%AD%A3/</link><pubDate>Thu, 07 May 2026 00:00:00 +0000</pubDate><guid>https://elizahone.github.io/post/2026/05/07/game101-%E9%87%8D%E5%BF%83%E5%9D%90%E6%A0%87%E7%9F%AB%E6%AD%A3/</guid><description>&lt;p&gt;在光栅化三角形时，我们常使用&lt;strong&gt;重心坐标&lt;/strong&gt;来判断点是否在三角形内、插值法线、插值纹理坐标，然而在光栅化
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Elizahone's Site</title><link>https://elizahone.github.io/post/</link><description>Recent content on Elizahone's Site</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Thu, 07 May 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://elizahone.github.io/post/index.xml" rel="self" type="application/rss+xml"/><item><title>[Game101] 重心坐标矫正</title><link>https://elizahone.github.io/post/2026/05/games101-screen-to-view/</link><pubDate>Thu, 07 May 2026 00:00:00 +0000</pubDate><guid>https://elizahone.github.io/post/2026/05/games101-screen-to-view/</guid><description>&lt;p&gt;在光栅化三角形时，我们常使用&lt;strong&gt;重心坐标&lt;/strong&gt;来判断点是否在三角形内、插值法线、插值纹理坐标，然而在光栅化
 三角形时计算出来的是在&lt;strong&gt;屏幕坐标&lt;/strong&gt;下的重心坐标，而在运用透视投影时实际需要的应该是在&lt;strong&gt;观察坐标&lt;/strong&gt;下的
 重心坐标，虽然不进行矫正在某种情况下看不出差别。本文将基于&lt;a href="https://www.bilibili.com/video/BV1X7411F744"&gt;Games101&lt;/a&gt;所给的的投影矩阵进行矫正公式的推导。&lt;/p&gt;
 &lt;h1 id="正文"&gt;正文&lt;/h1&gt;
@@ -20,23 +20,50 @@ n &amp; 0 &amp; 0 &amp; 0 \newline
 0 &amp; 0 &amp; 1 &amp; 0
 \end{bmatrix}
 $$&lt;p&gt;根据正交投影的性质，可知正交投影并不会改变 $x、y、z$ 的值，实际改变 $x、y、z$ 的是矩阵M,其中：
-&lt;/p&gt;</description></item><item><title>A Plain Markdown Post</title><link>https://elizahone.github.io/post/2016/02/14/a-plain-markdown-post/</link><pubDate>Sun, 14 Feb 2016 00:00:00 +0000</pubDate><guid>https://elizahone.github.io/post/2016/02/14/a-plain-markdown-post/</guid><description>&lt;p&gt;This sample post is mainly for
-&lt;a href="https://github.com/rstudio/blogdown"&gt;&lt;strong&gt;blogdown&lt;/strong&gt;&lt;/a&gt; users. If you do not use
-&lt;strong&gt;blogdown&lt;/strong&gt;, you can skip the first section.&lt;/p&gt;
-&lt;h1 id="1-markdown-or-r-markdown"&gt;1. Markdown or R Markdown&lt;/h1&gt;
-&lt;p&gt;This is a post written in plain Markdown (&lt;code&gt;*.md&lt;/code&gt;) instead of R Markdown
-(&lt;code&gt;*.Rmd&lt;/code&gt;). The major differences are:&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;You cannot run any R code in a plain Markdown document, whereas in an R
-Markdown document, you can embed R code chunks (&lt;code&gt;```{r}&lt;/code&gt;);&lt;/li&gt;
-&lt;li&gt;A plain Markdown post is rendered through
-&lt;a href="https://gohugo.io/overview/configuration/"&gt;Goldmark&lt;/a&gt; by default, and an R
-Markdown document is compiled by
-&lt;a href="http://rmarkdown.rstudio.com"&gt;&lt;strong&gt;rmarkdown&lt;/strong&gt;&lt;/a&gt; and
-&lt;a href="http://pandoc.org"&gt;Pandoc&lt;/a&gt;.&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;There are differences in syntax between Goldmark&amp;rsquo;s Markdown and Pandoc&amp;rsquo;s
-Markdown. For example, Goldmark does not support LaTeX math and Pandoc does. I
-have added the KaTeX support to this theme (i.e.,
-&lt;a href="https://github.com/yihui/hugo-xmin"&gt;hugo-xmin&lt;/a&gt;)&lt;/p&gt;</description></item><item><title>Lorem Ipsum</title><link>https://elizahone.github.io/post/2015/07/23/lorem-ipsum/</link><pubDate>Thu, 23 Jul 2015 00:00:00 +0000</pubDate><guid>https://elizahone.github.io/post/2015/07/23/lorem-ipsum/</guid><description>&lt;p&gt;&lt;strong&gt;Lorem ipsum&lt;/strong&gt; dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore &lt;em&gt;magna aliqua&lt;/em&gt;. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&lt;/p&gt;
-&lt;p&gt;Quisque mattis volutpat lorem vitae feugiat. Praesent porta est quis porta imperdiet. Aenean porta, mi non cursus volutpat, mi est mollis libero, id suscipit orci urna a augue. In fringilla euismod lacus, vitae tristique massa ultricies vitae. Mauris accumsan ligula tristique, viverra nulla sed, porta sapien. Vestibulum facilisis nec nisl blandit convallis. Maecenas venenatis porta malesuada. Ut ac erat tortor. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla sodales quam sit amet tincidunt egestas. In et turpis at orci vestibulum ullamcorper. Aliquam sed ante libero. Sed hendrerit arcu lacus.&lt;/p&gt;</description></item></channel></rss>
+&lt;/p&gt;</description></item><item><title>[Game101] 法线变换的数学原理：为什么必须使用逆转置矩阵</title><link>https://elizahone.github.io/post/2026/05/games101-normal-tranform/</link><pubDate>Sat, 02 May 2026 00:00:00 +0000</pubDate><guid>https://elizahone.github.io/post/2026/05/games101-normal-tranform/</guid><description>&lt;h1 id="法线变换的数学原理为什么必须使用逆转置矩阵"&gt;法线变换的数学原理：为什么必须使用逆转置矩阵&lt;/h1&gt;
+&lt;h2 id="1-问题定义"&gt;1. 问题定义&lt;/h2&gt;
+&lt;p&gt;在三维图形学中，我们经常需要将表面的法线从一个坐标系变换到另一个坐标系（例如从模型局部坐标系变换到视图坐标系）。&lt;/p&gt;
+&lt;p&gt;已知：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;变换矩阵 $M$（例如 &lt;code&gt;view * model&lt;/code&gt;），用于变换顶点位置和切向量。&lt;/li&gt;
+&lt;li&gt;切向量 $T$（位于表面上）和法线 $N$（垂直于表面）在原始空间中满足垂直关系：&lt;/li&gt;
+&lt;/ul&gt;
+$$
+T \cdot N = 0 \quad \Rightarrow \quad T^T N = 0
+$$&lt;p&gt;目标：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;找到矩阵 $Q$，使得变换后的法线 $N' = Q \cdot N$ 仍然垂直于变换后的切向量 $T' = M \cdot T$。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="2-约束条件垂直性保持"&gt;2. 约束条件（垂直性保持）&lt;/h2&gt;
+&lt;p&gt;变换后，垂直关系应仍然成立：&lt;/p&gt;
+$$
+T' \cdot N' = 0
+$$&lt;p&gt;代入 $T' = M T$ 和 $N' = Q N$：&lt;/p&gt;
+$$
+(M T) \cdot (Q N) = (M T)^T (Q N) = T^T M^T Q N = 0
+$$&lt;h2 id="3-利用原始垂直条件"&gt;3. 利用原始垂直条件&lt;/h2&gt;
+&lt;p&gt;原始空间中已知 $T^T N = 0$。&lt;/p&gt;</description></item><item><title>[Games101] 透视矩阵</title><link>https://elizahone.github.io/post/2026/05/games101-perspective-matrix/</link><pubDate>Sat, 02 May 2026 00:00:00 +0000</pubDate><guid>https://elizahone.github.io/post/2026/05/games101-perspective-matrix/</guid><description>&lt;h1 id="透视矩阵"&gt;透视矩阵&lt;/h1&gt;
+&lt;p&gt;&lt;img src="fov.png" alt="Pers"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;（near和far都是负数）&lt;/strong&gt;
+&lt;strong&gt;正交投影矩阵&lt;/strong&gt;： 左边，先缩放，再平移。右边，先平移，在缩放。&lt;/p&gt;
+$$
+M_{正交}=\begin{bmatrix}
+\frac{2}{r-l} &amp; 0 &amp; 0 &amp; -\frac{r+l}{r-l}\\
+0 &amp; \frac{2}{t-b} &amp; 0 &amp; -\frac{t+b}{t-b}\\
+0 &amp; 0 &amp; \frac{2}{n-f} &amp; -\frac{f+n}{n-f} \\
+0 &amp; 0 &amp; 0 &amp; 1
+\end{bmatrix}=
+\begin{bmatrix}
+\frac{2}{r-l} &amp; 0 &amp; 0 &amp; 0\\
+0 &amp; \frac{2}{t-b} &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; \frac{2}{n-f} &amp; 0 \\
+0 &amp; 0 &amp; 0 &amp; 1
+\end{bmatrix}
+\times
+\begin{bmatrix}
+1 &amp; 0 &amp; 0 &amp; -\frac{r+l}{2}\\
+0 &amp; 1 &amp; 0 &amp; -\frac{t+b}{2}\\
+0 &amp; 0 &amp; 1 &amp; -\frac{f+n}{2} \\
+0 &amp; 0 &amp; 0 &amp; 1
+\end{bmatrix}
+$$&lt;p&gt;&lt;strong&gt;透视投影矩阵&lt;/strong&gt;：先变换成正交，再用正交变换进行（当对称时可简化）&lt;/p&gt;</description></item></channel></rss>
