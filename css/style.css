@@ -5,9 +5,18 @@ body {
   line-height: 1.5;
 }
 
+
+
+a:link,a:visited{
+    color:#0000ff !important;
+}
+
 /* header and footer areas */
 .menu { padding: 0; }
-.menu li { display: inline-block; }
+.menu li {
+  display: inline-block;
+  margin: 0 5px;
+}
 .article-meta, .menu a {
   text-decoration: none;
   background: #eee;
