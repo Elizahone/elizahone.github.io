@@ -1,0 +1,517 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>极小曲面&参数化 | Elizahone's Site</title><link rel=stylesheet href=/css/style.css><link rel=stylesheet href=/css/fonts.css><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css></head><body><nav><ul class=menu><li><a href=/>Home</a></li><li><a href=/about/>About</a></li><li><a href=/post/>Blog</a></li><li><a href=/categories/>Categories</a></li><li><a href=/tags/>Tags</a></li><li><a href=/index.xml>Subscribe</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>极小曲面&参数化</span></h1><h2 class=date>2026/09/20</h2></div><main><pre><code class=language-c++>
+#include &lt;cmath&gt;
+#include &lt;igl/opengl/glfw/Viewer.h&gt;
+#include &lt;OpenMesh/Core/IO/MeshIO.hh&gt;
+#include &lt;OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh&gt;
+#include &lt;map&gt;
+#include &lt;Eigen/Sparse&gt;
+#include &quot;simplify.h&quot;
+
+MyMesh mesh;
+void openmesh2libigl(MyMesh&amp; mesh,
+                     Eigen::MatrixXd&amp; V,
+                     Eigen::MatrixXi&amp; F);
+
+const int cache_size = 12;
+Eigen::MatrixXd V[cache_size];
+Eigen::MatrixXi F[cache_size];
+bool flag[cache_size] = {false};
+int ti = 1;
+bool key_down(igl::opengl::glfw::Viewer&amp; viewer, unsigned char key, int modifier)
+{
+    if(key == '1')
+    {
+        if(ti &lt; cache_size)
+        {
+            if(!flag[ti])
+            {
+                simplify(mesh,0.5f);
+                std::cout &lt;&lt; &quot;vertices : &quot; &lt;&lt; mesh.n_vertices() &lt;&lt; std::endl;;
+                std::cout &lt;&lt; &quot;faces : &quot; &lt;&lt; mesh.n_faces() &lt;&lt; std::endl;;
+                openmesh2libigl(mesh,V[ti],F[ti]);
+                flag[ti] = true;
+            }
+            viewer.data().clear();
+            viewer.data().set_mesh(V[ti],F[ti]);
+            viewer.core().align_camera_center(V[ti],F[ti]);
+            ti++;
+        }
+
+    }
+    else if(key == '2')
+    {
+        if(ti &gt; 1)
+        {
+            ti--;
+            viewer.data().clear();
+            viewer.data().set_mesh(V[ti],F[ti]);
+            viewer.core().align_camera_center(V[ti],F[ti]);
+        }
+    }
+    return false;
+}
+
+
+// void minimal_curve(MyMesh&amp; mesh);
+
+double voronoi_area(MyMesh&amp; mesh, MyMesh::VertexHandle _vh);
+void minimal_curve(MyMesh&amp; mesh, const int interations, float lambda = 0.1);
+void global_minimal_curve(MyMesh&amp; mesh);
+MyMesh parametrization(MyMesh mesh);
+
+int main(int argc, char *argv[])
+{
+    if (argc != 2) return 1;
+
+    mesh.request_vertex_normals();
+    if (!mesh.has_vertex_normals()) {
+        std::cerr &lt;&lt; &quot;ERROR: there is no Normal attribute&quot; &lt;&lt; std::endl;
+    }
+    OpenMesh::IO::Options opt;
+    opt += OpenMesh::IO::Options::VertexNormal;
+    if (!OpenMesh::IO::read_mesh(mesh, argv[1], opt)) {
+        std::cerr &lt;&lt; &quot;ERROR: can't read mesh from obj file&quot; &lt;&lt; std::endl;
+    }
+
+    const int interations = 500;
+    const float lambda = 0.005f;
+
+    // minimal_curve(mesh, interations, lambda);
+
+    // global_minimal_curve(mesh);
+    //mesh = parametrization(mesh);
+    igl::opengl::glfw::Viewer viewer;
+    viewer.callback_key_down = &amp;key_down;
+    openmesh2libigl(mesh,V[0],F[0]);
+
+    std::cout &lt;&lt; &quot;vertices : &quot; &lt;&lt;  mesh.n_vertices() &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;faces : &quot; &lt;&lt; mesh.n_faces() &lt;&lt; std::endl;
+    viewer.data().set_mesh(V[0], F[0]);
+    // Disable wireframe
+    //viewer.data().show_texture = true;
+    viewer.launch();
+}
+
+
+
+void openmesh2libigl(MyMesh&amp; mesh,
+                     Eigen::MatrixXd&amp; V,
+                     Eigen::MatrixXi&amp; F) {
+    int n_vertices = mesh.n_vertices();
+    int n_faces = mesh.n_faces();
+
+    V.resize(n_vertices, 3);
+    F.resize(n_faces, 3);
+
+    std::map&lt;MyMesh::VertexHandle, int&gt; vertex_index;
+
+    int v_idx = 0;
+    for (MyMesh::VertexIter it = mesh.vertices_begin(); it != mesh.vertices_end(); it++) {
+        const MyMesh::Point&amp; p = mesh.point(*it);
+        V(v_idx, 0) = p[0];
+        V(v_idx, 1) = p[1];
+        V(v_idx, 2) = p[2];
+
+        vertex_index[*it] = v_idx;
+        v_idx++;
+    }
+
+    int f_idx = 0;
+    for (auto it = mesh.faces_begin(); it != mesh.faces_end(); it++) {
+        int count = 0;
+        for (MyMesh::FaceVertexIter fvit = mesh.fv_iter(*it); fvit.is_valid(); fvit++) {
+            F(f_idx, count) = vertex_index[*fvit];
+            count++;
+        }
+        f_idx++;
+    }
+}
+
+
+double voronoi_area(MyMesh&amp; mesh, MyMesh::VertexHandle vh) {
+    double area = 0.0f;
+    for (auto vf_it = mesh.vf_iter(vh); vf_it.is_valid(); vf_it++) {
+        MyMesh::Point pointTemp[3];
+        int k = 0;
+        for (auto fv_it = mesh.fv_iter(*vf_it); fv_it.is_valid(); fv_it++) {
+            pointTemp[k] = mesh.point(*fv_it);
+            if (k != 0 &amp;&amp; vh == *fv_it) {
+                MyMesh::Point temp;
+                temp = pointTemp[0];
+                pointTemp[0] = pointTemp[k];
+                pointTemp[k] = temp;
+            }
+            k++;
+        }
+        double costheta = ((pointTemp[1] - pointTemp[0]) | (pointTemp[2] - pointTemp[0])) /
+            (sqrt((pointTemp[1] - pointTemp[0]) | (pointTemp[1] - pointTemp[0])) *
+            sqrt((pointTemp[2] - pointTemp[0]) | (pointTemp[2] - pointTemp[0])));
+        double cosAlphal = ((pointTemp[0] - pointTemp[1]) | (pointTemp[2] - pointTemp[1])) /
+            (sqrt((pointTemp[0] - pointTemp[1]) | (pointTemp[0] - pointTemp[1])) *
+            sqrt((pointTemp[2] - pointTemp[1]) | (pointTemp[2] - pointTemp[1])));
+        double cosAlpha2 = ((pointTemp[1] - pointTemp[2]) | (pointTemp[0] - pointTemp[2])) /
+            (sqrt((pointTemp[1] - pointTemp[2]) | (pointTemp[1] - pointTemp[2])) *
+            sqrt((pointTemp[0] - pointTemp[2]) | (pointTemp[0] - pointTemp[2])));
+        if (costheta &lt; 0 || cosAlphal &lt; 0 || cosAlpha2 &lt; 0)
+        {
+            double areaT = 0.5*sqrt(1 - costheta * costheta)*sqrt((pointTemp[1] - pointTemp[0]) |
+            (pointTemp[1] - pointTemp[0])) * sqrt((pointTemp[2] - pointTemp[0]) | (pointTemp[2] - pointTemp[0]));
+            if (costheta &lt; 0) area += areaT * 0.5;
+            else area += areaT * 0.25;
+        }
+        else
+        {
+            double cotAlphal, cotAlpha2;
+            cotAlphal = cosAlphal / sqrt(1 - cosAlphal * cosAlphal);
+            cotAlpha2 = cosAlpha2 / sqrt(1 - cosAlpha2 * cosAlpha2);
+            area += 0.125*(((pointTemp[1] - pointTemp[0]) | (pointTemp[1] - pointTemp[0]))*
+            cotAlpha2 + ((pointTemp[2] - pointTemp[0]) | (pointTemp[2] - pointTemp[0]))*cotAlphal);
+        }
+    }
+    return area;
+}
+
+
+std::map&lt;MyMesh::VertexHandle, MyMesh::Point&gt; meanCurvature(MyMesh mesh)
+{
+    //找到一邻域所有顶点，对每个顶点，求其相邻两个面的角的正切值
+    std::map&lt;MyMesh::VertexHandle, MyMesh::Point&gt; result;
+    for (auto v_it = mesh.vertices_begin();v_it != mesh.vertices_end() ;++v_it)
+    {
+        MyMesh::Point addij = { 0.0,0.0,0.0 };
+        for (auto voh_it = mesh.voh_iter(*v_it);voh_it.is_valid() ;++voh_it)
+        {
+            MyMesh::HalfedgeHandle et = *voh_it;
+            double cot[2];
+            for (int i = 0;i &lt; 2;i++)
+            {
+                OpenMesh::Vec3d t[3];
+                t[0] = mesh.point(mesh.from_vertex_handle(et));
+                t[1] = mesh.point(mesh.to_vertex_handle(et));
+                MyMesh::HalfedgeHandle nexte = mesh.next_halfedge_handle(et);
+                t[2] = mesh.point(mesh.to_vertex_handle(nexte));//求t2角的正切
+                double cost2 = ((t[0] - t[2]) | (t[1] - t[2])) /
+                    (sqrt((t[0] - t[2]) | (t[0] - t[2])) * sqrt((t[1]-t[2])|(t[1]-t[2])));
+                cot[i] = cost2 / sqrt(1 - cost2 * cost2);
+                et = mesh.opposite_halfedge_handle(et);
+            }
+            MyMesh::Point vj = mesh.point(mesh.to_vertex_handle(*voh_it)), vi = mesh.point(*v_it);
+            addij += (cot[0] + cot[1]) * (vj - vi);
+        }
+        double mixedArea = voronoi_area(mesh, *v_it);
+        result[*v_it] = 0.5 * addij / mixedArea;
+    }
+    return result;
+}
+
+void minimal_curve(MyMesh&amp; mesh, const int interations, float lambda) {
+    for (int i = 0; i &lt; interations; i++) {
+        auto MCF = meanCurvature(mesh);
+
+        for (auto v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++) {
+            if (mesh.is_boundary(*v_it)) continue;
+            MyMesh::Point new_pos = mesh.point(*v_it) + lambda * MCF[*v_it] / 2;
+            mesh.point(*v_it) = new_pos;
+        }
+        // mesh.update_normals();
+    }
+}
+void global_minimal_curve(MyMesh&amp; mesh) {
+    int n = mesh.n_vertices();
+    Eigen::SparseMatrix&lt;double&gt; A(n, n);
+    Eigen::SparseLU&lt;Eigen::SparseMatrix&lt;double&gt;, Eigen::COLAMDOrdering&lt;int&gt; &gt; solver;
+    std::vector&lt;Eigen::Triplet&lt;double&gt;&gt; triplets;
+    Eigen::VectorXd b_x(n), b_y(n), b_z(n);
+
+    for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++) {
+
+        int idx = v_it-&gt;idx();
+        if (mesh.is_boundary(*v_it)) {
+            triplets.push_back({ idx, idx, 1.0f });
+            b_x[idx] = mesh.point(*v_it)[0];
+            b_y[idx] = mesh.point(*v_it)[1];
+            b_z[idx] = mesh.point(*v_it)[2];
+            continue ;
+        }
+
+        double count = 0.0f;
+        for (auto voh_it = mesh.voh_iter(*v_it);voh_it.is_valid() ;++voh_it)
+        {
+            MyMesh::HalfedgeHandle et = *voh_it;
+            double cot[2];
+            for (int i = 0;i &lt; 2;i++)
+            {
+                OpenMesh::Vec3d t[3];
+                t[0] = mesh.point(mesh.from_vertex_handle(et));
+                t[1] = mesh.point(mesh.to_vertex_handle(et));
+                MyMesh::HalfedgeHandle nexte = mesh.next_halfedge_handle(et);
+                t[2] = mesh.point(mesh.to_vertex_handle(nexte));//求t2角的正切
+                double cost2 = ((t[0] - t[2]) | (t[1] - t[2])) /
+                    (sqrt((t[0] - t[2]) | (t[0] - t[2])) * sqrt((t[1]-t[2])|(t[1]-t[2])));
+                cot[i] = cost2 / sqrt(1 - cost2 * cost2);
+                et = mesh.opposite_halfedge_handle(et);
+            }
+            double w = cot[0] + cot[1];
+            triplets.push_back({ idx, voh_it-&gt;to().idx(), -w });
+            count += w;
+        }
+        triplets.push_back({ idx, idx, count });
+        b_x[idx] = 0;
+        b_y[idx] = 0;
+        b_z[idx] = 0;
+    }
+
+    A.setFromTriplets(triplets.begin(), triplets.end());
+    solver.analyzePattern(A);
+    solver.factorize(A);
+    Eigen::VectorXd x = solver.solve(b_x);
+    Eigen::VectorXd y = solver.solve(b_y);
+    Eigen::VectorXd z = solver.solve(b_z);
+
+
+    for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++) {
+        int idx = v_it-&gt;idx();
+        // if (!mesh.is_boundary(*v_it))
+            mesh.set_point(*v_it, { x[idx], y[idx], z[idx] });
+    }
+}
+
+double get_weight_cotangent(MyMesh::VertexOHalfedgeIter&amp; voh_it) {
+    MyMesh::HalfedgeHandle et = *voh_it;
+    double cot[2];
+    for (int i = 0;i &lt; 2;i++)
+    {
+        OpenMesh::Vec3d t[3];
+        t[0] = mesh.point(mesh.from_vertex_handle(et));
+        t[1] = mesh.point(mesh.to_vertex_handle(et));
+        MyMesh::HalfedgeHandle nexte = mesh.next_halfedge_handle(et);
+        t[2] = mesh.point(mesh.to_vertex_handle(nexte));//求t2角的正切
+        double cost2 = ((t[0] - t[2]) | (t[1] - t[2])) /
+            (sqrt((t[0] - t[2]) | (t[0] - t[2])) * sqrt((t[1]-t[2])|(t[1]-t[2])));
+        cot[i] = cost2 / sqrt(1 - cost2 * cost2);
+        et = mesh.opposite_halfedge_handle(et);
+    }
+    return cot[0] + cot[1];
+}
+double get_weight_uniform(MyMesh::VertexOHalfedgeIter&amp; voh_it) {
+    return 1.0f;
+}
+
+MyMesh parametrization(MyMesh mesh) {
+    const double PI = 3.141592653;
+    int n_vertices = mesh.n_vertices();
+    Eigen::SparseMatrix&lt;double&gt; A(n_vertices, n_vertices);
+    Eigen::VectorXd b_u(n_vertices), b_v(n_vertices);
+    Eigen::SparseLU&lt;Eigen::SparseMatrix&lt;double&gt;, Eigen::COLAMDOrdering&lt;int&gt; &gt; solver;
+    b_u.setZero(); b_v.setZero();
+    std::vector&lt;Eigen::Triplet&lt;double&gt;&gt; triplets;
+    std::vector&lt;int&gt; boundary_index;
+    for (MyMesh::HalfedgeIter he_it = mesh.halfedges_begin(); he_it != mesh.halfedges_end(); he_it++) {
+        if (mesh.is_boundary(*he_it)) {
+            int idx = mesh.to_vertex_handle(*he_it).idx();
+            boundary_index.push_back(idx);
+            MyMesh::HalfedgeHandle he_it_loop = he_it-&gt;next();
+            while (he_it_loop != *he_it) {
+                boundary_index.push_back(mesh.to_vertex_handle(he_it_loop).idx());
+                he_it_loop = mesh.next_halfedge_handle(he_it_loop);
+            }
+            break;
+        }
+    }
+    for (int i = 0; i &lt; (int)boundary_index.size(); i++) {
+        double angle = 2 * PI * i / (float)boundary_index.size();
+        b_u[boundary_index[i]] = -std::cos(angle);
+        b_v[boundary_index[i]] = -std::sin(angle);
+    }
+
+    for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++) {
+        int row = v_it-&gt;idx();
+        if (mesh.is_boundary(*v_it)) {
+            triplets.push_back( { row, row, 1.0f } );
+            continue;
+        }
+
+        // N-1 ring
+        double total_weight = 0.0f;
+        for (auto voh_it = mesh.voh_iter(*v_it);voh_it.is_valid() ;++voh_it)
+        {
+            double w = get_weight_cotangent(voh_it);
+            if (mesh.is_boundary(mesh.to_vertex_handle(*voh_it))) {
+                b_u[row] += w * b_u[mesh.to_vertex_handle(*voh_it).idx()];
+                b_v[row] += w * b_v[mesh.to_vertex_handle(*voh_it).idx()];
+            } else {
+                triplets.push_back({ row, voh_it-&gt;to().idx(), -w });
+            }
+            total_weight += w;
+        }
+        triplets.push_back({ row, row, total_weight });
+    }
+    A.setFromTriplets(triplets.begin(), triplets.end());
+    solver.analyzePattern(A);
+    solver.factorize(A);
+    Eigen::VectorXd u = solver.solve(b_u);
+    Eigen::VectorXd v = solver.solve(b_v);
+    for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++) {
+        int idx = v_it-&gt;idx();
+        // if (!mesh.is_boundary(*v_it))
+            mesh.set_point(*v_it, { u[idx], v[idx], 0 });
+    }
+    return mesh;
+}
+
+</code></pre><p>simplify.cpp</p><pre><code>#include &quot;simplify.h&quot;
+#include &quot;Eigen/src/Core/Matrix.h&quot;
+#include &lt;queue&gt;
+
+void simplify(MyMesh&amp; mesh, double ratio)
+{
+    mesh.request_face_normals();
+    mesh.update_face_normals();
+    int it_num = (1.0f - ratio) * mesh.n_vertices();
+
+    auto Q = OpenMesh::makeTemporaryProperty&lt;MyMesh::VertexHandle, Eigen::Matrix4d&gt;(mesh);
+    // since we will update / delete vertex during processing, so I set a timestamp for each vertex
+    // to indicate the status of vertex.
+    auto timestamp = OpenMesh::makeTemporaryProperty&lt;MyMesh::VertexHandle, int&gt;(mesh);
+    auto p = OpenMesh::makeTemporaryProperty&lt;MyMesh::FaceHandle, Eigen::Vector4d&gt;(mesh);
+    auto v = OpenMesh::makeTemporaryProperty&lt;MyMesh::VertexHandle, Eigen::Vector4d&gt;(mesh);
+
+    // 1. initiliza Q matrix
+    for (auto f_it = mesh.faces_begin(); f_it != mesh.faces_end(); f_it++) {
+        OpenMesh::VectorT&lt;float, 3&gt; normal = mesh.normal(*f_it);
+        normal.normalize();
+        double a = normal[0], b = normal[1], c = normal[2];
+        auto pp = mesh.point(f_it-&gt;halfedge().to());
+        double d = - (a * pp[0] + b * pp[1] + c * pp[2]);
+
+        p[*f_it] = {a, b, c, d};
+    }
+    for (auto v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); v_it++) {
+        Eigen::Matrix4d tmp; tmp.setZero();
+        for (auto vf_it = mesh.vf_iter(*v_it); vf_it.is_valid(); vf_it++) {
+            tmp += p[*vf_it] * p[*vf_it].transpose();
+        }
+        Q[*v_it] = tmp;
+        v[*v_it][0] = mesh.point(*v_it)[0];
+        v[*v_it][1] = mesh.point(*v_it)[1];
+        v[*v_it][2] = mesh.point(*v_it)[2];
+        v[*v_it][3] = 1.0f;
+        timestamp[*v_it] = 0;
+    }
+
+    // 2. push into heap
+    std::priority_queue&lt;V_Pair&gt; q;
+    for (auto e_it = mesh.edges_begin(); e_it != mesh.edges_end(); e_it++) {
+        Eigen::Matrix4d Q_new = Q[e_it-&gt;v0()] + Q[e_it-&gt;v1()];
+        Eigen::Matrix4d tQ = Q_new;
+        Eigen::Vector4d b = { 0.0, 0.0, 0.0, 1.0 };
+        tQ(3, 0) = 0.0, tQ(3, 1) = 0.0, tQ(3, 2) = 0.0, tQ(3, 3) = 1.0;
+        Eigen::FullPivLU&lt;Eigen::Matrix4d&gt; lu(tQ);
+        Eigen::Vector4d nv;
+        if (lu.isInvertible()) {
+            nv = tQ.inverse() * b;
+        } else {
+            nv = (v[e_it-&gt;v0()] + v[e_it-&gt;v1()]) / 2.0f;
+        }
+
+        V_Pair vp;
+        vp.cost = nv.transpose() * Q_new * nv;
+        vp.he = e_it-&gt;halfedge(0);
+        vp.newQ = Q_new;
+        vp.new_pos = { nv[0], nv[1], nv[2] };
+        vp.v_from = e_it-&gt;halfedge(0).from();
+        vp.v_to= e_it-&gt;halfedge(0).to();
+        vp.v_from_timestamp = timestamp[e_it-&gt;halfedge(0).from()];
+        vp.v_to_timestamp = timestamp[e_it-&gt;halfedge(0).to()];
+        q.push(vp);
+
+    }
+    // 3. interatively contract edge;
+    mesh.request_vertex_status();
+    mesh.request_face_status();
+    mesh.request_edge_status();
+    int i = 0;
+    while (i &lt; it_num) {
+
+        V_Pair vp = q.top();
+        q.pop();
+        if (mesh.status(vp.v_from).deleted() || mesh.status(vp.v_to).deleted()) continue;
+        if (vp.v_from_timestamp != timestamp[vp.v_from] || vp.v_to_timestamp != timestamp[vp.v_to]) {
+            continue;
+        }
+        // contraction
+        MyMesh::VertexHandle v_bar;
+        if (mesh.is_collapse_ok(vp.he)) {
+            mesh.collapse(vp.he);
+            v_bar = vp.v_to;
+        } else if (mesh.is_collapse_ok(mesh.opposite_halfedge_handle(vp.he))) {
+            mesh.collapse(mesh.opposite_halfedge_handle(vp.he));
+            v_bar = vp.v_from;
+        } else {
+            continue ;
+        }
+        timestamp[vp.v_from]++;
+        timestamp[vp.v_to]++;
+
+        mesh.set_point(v_bar, vp.new_pos);
+        Q[v_bar] = vp.newQ;
+        v[v_bar] = { vp.new_pos[0], vp.new_pos[1], vp.new_pos[2], 1.0 };
+        for (auto voh_it = mesh.voh_iter(v_bar); voh_it.is_valid(); voh_it++) {
+            auto vj = voh_it-&gt;to();
+            Eigen::Matrix4d Q_new = Q[v_bar] + Q[vj];
+            Eigen::Matrix4d tQ = Q_new;
+            Eigen::Vector4d b = { 0.0, 0.0, 0.0, 1.0 };
+            tQ(3, 0) = 0.0, tQ(3, 1) = 0.0, tQ(3, 2) = 0.0, tQ(3, 3) = 1.0;
+            Eigen::FullPivLU&lt;Eigen::Matrix4d&gt; lu(tQ);
+            Eigen::Vector4d nv;
+            if (lu.isInvertible()) {
+                nv = tQ.inverse() * b;
+            } else {
+                nv = (v[v_bar] + v[vj]) / 2.0f;
+            }
+            V_Pair vp_;
+            vp_.cost = nv.transpose() * Q_new * nv;
+            vp_.he = *voh_it;
+            vp_.newQ = Q_new;
+            vp_.new_pos = { nv[0], nv[1], nv[2] };
+            vp_.v_from = v_bar;
+            vp_.v_to= vj;
+            vp_.v_from_timestamp = timestamp[v_bar];
+            vp_.v_to_timestamp = timestamp[vj];
+            q.push(vp_);
+        }
+        i++;
+    }
+
+
+    mesh.garbage_collection();
+}
+
+</code></pre><p>simplify.h</p><pre><code>
+
+#pragma once
+
+#include &lt;Eigen/Eigen&gt;
+#include &lt;igl/opengl/glfw/Viewer.h&gt;
+#include &lt;OpenMesh/Core/IO/MeshIO.hh&gt;
+#include &lt;OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh&gt;
+#include &lt;OpenMesh/Core/Utils/PropertyManager.hh&gt;
+typedef OpenMesh::TriMesh_ArrayKernelT&lt;&gt; MyMesh;
+
+struct V_Pair {
+    MyMesh::HalfedgeHandle he;
+    MyMesh::VertexHandle v_from;
+    MyMesh::VertexHandle v_to;
+    int v_from_timestamp;
+    int v_to_timestamp;
+    double cost;
+    MyMesh::Point new_pos;
+    Eigen::Matrix4d newQ;
+    bool operator&lt; (const V_Pair&amp; other) const {
+        return this-&gt;cost &gt; other.cost;
+    }
+};
+
+void simplify(MyMesh&amp; mesh, double ratio);
+
+</code></pre></main><footer><link rel=stylesheet href=//cdn.jsdelivr.net/npm/katex/dist/katex.min.css><script src=//cdn.jsdelivr.net/npm/@xiee/utils/js/math-code.min.js defer></script><script src=//cdn.jsdelivr.net/npm/katex/dist/katex.min.js defer></script><script src=//cdn.jsdelivr.net/npm/katex/dist/contrib/auto-render.min.js defer></script><script src=//cdn.jsdelivr.net/npm/@xiee/utils/js/render-katex.js defer></script><script src=//cdn.jsdelivr.net/npm/@xiee/utils/js/center-img.min.js defer></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1},{left:"\\[",right:"\\]",display:!0}],throwOnError:!1})})</script><hr>© <a href=https://elizahone.github.io>Elizahone</a> 2026 &ndash; 2026 | <a href=https://github.com/elizahone>Github</a></footer></body></html>
