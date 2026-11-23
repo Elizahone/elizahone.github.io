@@ -1,60 +1,442 @@
+/* ==========================================================================
+   Paper & Ink — a scholarly, book-like theme for hugo-xmin
+   Adapted from the typography and palette of example.html
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+  --ink: #1a1a1a;
+  --ink-2: #3d3d3d;
+  --muted: #6b6b6b;
+  --line: #e2ded6;
+  --bg: #fdfcfa;
+  --panel: #f6f3ec;
+  --accent: #8a5a2b;
+  --accent-soft: #b98b57;
+  --code-bg: #f6f3ec;
+  --img-bg: #ffffff;
+  --row-hover: #faf8f3;
+  --th-line: #cfc8ba;
+}
+
+/* Night mode: warm ink-on-charcoal, same accent family as the paper theme */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e8e3d9;
+  --ink-2: #c8c1b4;
+  --muted: #9a9286;
+  --line: #3b3731;
+  --bg: #1c1b19;
+  --panel: #26241f;
+  --accent: #d0a26b;
+  --accent-soft: #a87c4b;
+  --code-bg: #24221e;
+  --img-bg: #26241f;
+  --row-hover: #2b2822;
+  --th-line: #4c453a;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
 body {
-  max-width: 800px;
-  margin: auto;
-  padding: 1em;
-  line-height: 1.5;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 56px 32px 96px;
+  line-height: 1.95;
+  background: var(--bg);
+  color: var(--ink);
+  transition: background-color .25s, color .25s;
+  font-family: "Songti SC", "Source Han Serif SC", "Noto Serif SC", Georgia,
+    "Times New Roman", serif;
+  font-size: 16.5px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-
-
-a:link,a:visited{
-    color:#0000ff !important;
-}
-
-/* header and footer areas */
-.menu { padding: 0; }
-.menu li {
-  display: inline-block;
-  margin: 0 5px;
-}
-.article-meta, .menu a {
+/* links: quiet underline, warm accent on hover --------------------------- */
+a:link, a:visited {
+  color: var(--accent);
   text-decoration: none;
-  background: #eee;
-  padding: 5px;
-  border-radius: 5px;
+  border-bottom: 1px solid var(--accent-soft);
+  transition: color .15s, border-color .15s;
 }
-.menu, .article-meta, footer { text-align: center; }
-.title { font-size: 1.1em; }
-footer a { text-decoration: none; }
-hr {
-  border-style: dashed;
-  color: #ddd;
+a:hover, a:focus-visible {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
 }
 
-/* code */
+/* GitHub icon on the homepage ------------------------------------------- */
+/* Inline SVG with currentColor so the logo follows the active theme:
+   ink-brown on paper, warm cream at night — never invisible. */
+a.github-link {
+  float: right;
+  margin: 2px 0 0 16px;
+  border: 0;
+  line-height: 1;
+  color: var(--accent);
+  transition: color .15s;
+}
+a.github-link:hover { color: var(--ink); border: 0; }
+.github-icon {
+  display: block;
+  width: 30px;
+  height: 30px;
+}
+
+/* header, navigation and footer ------------------------------------------ */
+nav { margin-bottom: 34px; }
+.menu {
+  padding: 14px 0 0;
+  margin: 0;
+  list-style: none;
+  border-bottom: 2px solid var(--ink);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 26px;
+}
+.menu li { display: inline-block; margin: 0; }
+.menu a, .article-meta a {
+  background: transparent;
+  padding: 0 0 12px;
+  border: 0;
+  border-radius: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans SC", sans-serif;
+  font-size: 14px;
+  letter-spacing: .06em;
+  color: var(--ink-2);
+}
+.menu a:hover { color: var(--accent); background: transparent; }
+.menu a[href=""]::before { content: "◈ "; color: var(--accent); }
+
+/* current section: distinct marker, ink colour and a solid underline */
+.menu a.active {
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.menu a.active::before {
+  content: "▸ ";
+  color: var(--accent);
+}
+.menu a[href=""].active::before { content: "◆ "; }
+
+nav > hr { display: none; }
+
+/* theme toggle ----------------------------------------------------------- */
+.theme-toggle-item {
+  margin-left: auto;
+  align-self: center;
+  line-height: 1;
+}
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--accent);
+  transition: background .15s, color .15s, border-color .15s;
+  flex: none;
+}
+.theme-toggle:hover {
+  background: var(--panel);
+  border-color: var(--accent-soft);
+}
+.theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.theme-toggle svg { width: 18px; height: 18px; display: block; }
+.theme-toggle .icon-sun { display: none; }
+html[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 40px 0;
+}
+
+/* table of contents ------------------------------------------------------ */
+nav.toc {
+  background: var(--panel);
+  border-radius: 3px;
+  padding: 18px 24px;
+  margin: 0 0 26px;
+  font-size: 14.5px;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans SC", sans-serif;
+  columns: 2;
+  column-gap: 32px;
+}
+nav.toc::before {
+  content: "目录";
+  display: block;
+  color: var(--accent);
+  letter-spacing: .18em;
+  font-size: 12.5px;
+  margin-bottom: 8px;
+  column-span: all;
+}
+nav.toc ul { list-style: none; margin: 0; padding: 0 0 0 0; }
+nav.toc ul ul { padding-left: 18px; }
+nav.toc li { margin: 0; break-inside: avoid; }
+nav.toc a {
+  color: var(--ink-2);
+  display: block;
+  padding: 2px 0;
+  border: 0;
+}
+nav.toc a:hover { color: var(--accent); }
+nav.toc > nav > ul > li > a { color: var(--accent); }
+
+@media (max-width: 640px) {
+  nav.toc { columns: 1; }
+}
+
+/* homepage extras -------------------------------------------------------- */
+p.site-tagline {
+  font-size: 15.5px;
+  color: var(--muted);
+  font-style: italic;
+  margin: -2px 0 18px;
+}
+.epigraph {
+  font-style: italic;
+  color: var(--ink-2);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+  margin: 22px 0;
+  font-size: 15.5px;
+}
+.epigraph b { font-style: normal; letter-spacing: .08em; color: var(--accent); }
+.epigraph .term { color: var(--muted); font-size: .92em; }
+
+/* article header --------------------------------------------------------- */
+.article-meta { margin: 0 0 12px; }
+.article-meta h1 {
+  font-size: 31px;
+  line-height: 1.4;
+  margin: 10px 0 8px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.article-meta .title { font-size: inherit; }
+.article-meta h2 {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+  margin: 0 0 2px;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans SC", sans-serif;
+  letter-spacing: .04em;
+}
+.article-meta .author::before { content: "作者／"; color: var(--accent); }
+.article-meta .date::before { content: "日期／"; color: var(--accent); }
+.article-meta > hr { display: none; }
+
+/* optional explanatory subtitle, set in front matter as `subtitle:` ------ */
+.article-subtitle {
+  font-size: 15px;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0 0 18px;
+}
+
+/* body typography -------------------------------------------------------- */
+main { hyphens: auto; }
+main > :first-child { margin-top: 0; }
+
+p { margin: 0 0 14px; text-align: justify; }
+
+h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.45; }
+main h1 {
+  font-size: 26px;
+  margin: 44px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--ink);
+}
+main h2 {
+  font-size: 22px;
+  margin: 46px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+main h3 { font-size: 17.5px; margin: 30px 0 10px; }
+main h4 { font-size: 16px; margin: 22px 0 8px; color: var(--accent); }
+main > h1:first-child { margin-top: 0; }
+
+ul, ol { margin: 0 0 14px; padding-left: 26px; }
+li { margin-bottom: 7px; text-align: justify; }
+li > p { margin: 0; }
+
+strong, b { color: var(--ink); }
+em, i { color: var(--ink-2); }
+
+blockquote {
+  background: var(--panel);
+  border-left: 3px solid var(--accent-soft);
+  padding: 14px 22px;
+  margin: 20px 0;
+  color: var(--ink-2);
+  font-style: italic;
+  border-radius: 2px;
+}
+blockquote p:last-child { margin-bottom: 0; }
+blockquote code { font-style: normal; }
+
+/* images, video ---------------------------------------------------------- */
+img, iframe, video { max-width: 100%; height: auto; }
+img {
+  display: block;
+  margin: 22px auto;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--img-bg);
+}
+figcaption, .caption {
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--muted);
+  margin-top: -12px;
+  margin-bottom: 22px;
+}
+
+/* code and preformatted blocks ------------------------------------------- */
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: .88em;
+  background: var(--code-bg);
+  color: var(--ink);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
 pre {
-  border: 1px solid #ddd;
-  box-shadow: 5px 5px 5px #eee;
-  padding: 1em;
+  margin: 20px 0;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: none;
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.6;
+  background: var(--img-bg);
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* tables ----------------------------------------------------------------- */
+table {
+  width: 100%;
+  margin: 18px 0;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans SC", sans-serif;
+  display: block;
   overflow-x: auto;
 }
-code { background: #f9f9f9; }
-pre code { background: none; }
+caption {
+  caption-side: top;
+  text-align: left;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: var(--ink-2);
+  font-family: "Songti SC", "Noto Serif SC", Georgia, serif;
+}
+th, td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+thead { background: transparent; }
+thead th {
+  background: var(--panel);
+  font-weight: 600;
+  color: var(--ink);
+  border-bottom: 1px solid var(--th-line);
+  font-size: 12.5px;
+  text-align: left;
+}
+tbody tr:nth-child(even) { background: transparent; }
+tbody tr:hover { background: var(--row-hover); }
+tfoot tr { background: transparent; }
 
-/* misc elements */
-img, iframe, video { max-width: 100%; }
-main { hyphens: auto; }
-blockquote {
-  background: #f9f9f9;
-  border-left: 5px solid #ccc;
-  padding: 3px 1em 3px;
+/* lists of posts (home, categories, tags) -------------------------------- */
+ul:not(.menu) > li > .date {
+  color: var(--muted);
+  font-size: 13.5px;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans SC", sans-serif;
+  letter-spacing: .03em;
+  margin-right: 10px;
+}
+ul:not(.menu) > li {
+  list-style: none;
+  position: relative;
+  padding-left: 18px;
+}
+ul:not(.menu) > li::before {
+  content: "·";
+  position: absolute;
+  left: 2px;
+  top: -1px;
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1;
+}
+ul.terms > li { list-style: none; }
+
+/* optional related-article note ------------------------------------------ */
+.article-related {
+  margin-top: 44px;
+  padding: 18px 24px;
+  background: var(--panel);
+  border-left: 3px solid var(--accent-soft);
+  border-radius: 2px;
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+.article-related .related-label {
+  display: block;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans SC", sans-serif;
+  font-size: 12.5px;
+  letter-spacing: .18em;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.article-related a { font-size: 15.5px; }
+
+/* footer ----------------------------------------------------------------- */
+footer {
+  margin-top: 50px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Noto Sans SC", sans-serif;
+  line-height: 1.9;
+}
+footer a { border-bottom: 0; }
+footer hr { display: none; }
+
+/* KaTeX tweaks: keep math in the ink colour ------------------------------ */
+.katex { color: var(--ink); font-size: 1.05em; }
+
+/* responsive ------------------------------------------------------------- */
+@media (max-width: 640px) {
+  body { padding: 28px 18px 60px; font-size: 16px; line-height: 1.85; }
+  .menu { gap: 2px 18px; }
+  .article-meta h1, main h1 { font-size: 25px; }
+  main h2 { font-size: 20px; }
+  table { font-size: 12px; }
 }
 
-table {
-  margin: auto;
-  border-top: 1px solid #666;
-  border-bottom: 1px solid #666;
+@media print {
+  body { background: #fff; color: #000; padding: 0; max-width: none; }
+  nav, footer { display: none; }
+  a { color: inherit; border: 0; }
 }
-table thead th { border-bottom: 1px solid #ddd; }
-th, td { padding: 5px; }
-thead, tfoot, tr:nth-child(even) { background: #eee; }
